@@ -76,16 +76,15 @@ class FormatConvertor:
         with open(self.output_file, 'w') as fo:
             
             for file_count, file_pair in enumerate(file_pair_list):
-                c=0
                 annotation_file, text_file = file_pair.ann, file_pair.text
                 input_annotations, text_string = self.read_input(annotation_file, text_file)
 
                 #Adding '-DOCSTART-' to the beginning of each text file
-                if c ==0:
-                    text_string = '-DOCSTART-' + text_string
-                    #print(text_string[0:100])
-                c=1
-                
+                # if c ==0:
+                #     text_string = '-DOCSTART-' + text_string
+                #     #print(text_string[0:100])
+                # c=1
+                fo.write("-DOCSTART- O\n")
 
                 text_tokens = re.split(r' ', text_string) #Splits when there is single space, but also considers each space as a different token in cases where there are multiple consecutive space.       
                 #print(text_tokens[0:100])
@@ -106,10 +105,9 @@ class FormatConvertor:
                 current_index = 0
                 num_tokens = len(text_tokens)
                 i = 0 # Initialize Token number
-                # if c==0:
-                #     i = 1
-                # else:
-                #     i=i
+                # if c == 0:
+                #     annotation_count = 1
+
                 
                 
                 if file_count ==1:
@@ -117,18 +115,27 @@ class FormatConvertor:
                 while i < num_tokens:
                     if current_index != current_ann_start:
                         fo.write(f'{text_tokens[i]} O\n')
+                        #print(text_tokens[i])
+                        wordletterlist = list(text_tokens[i])
+                        if '.' in wordletterlist:
+                            fo.write("\n")
+                        #print(wordlist) 
                         current_index += len(text_tokens[i])+1
                         i += 1
                     else:
                         label = input_annotations[annotation_count]["label"]
                         while current_index <= current_ann_end and i < num_tokens:
                             fo.write(f'{text_tokens[i]} {label}\n')
+                            if text_string[current_index] == '.':
+                                fo.write("heyy new line\n")
                             current_index += len(text_tokens[i])+1
                             i += 1
                         annotation_count += 1
                         if annotation_count < num_annotations:
                             current_ann_start = input_annotations[annotation_count]["start"]
-                            current_ann_end = input_annotations[annotation_count]["end"]
+                            current_ann_end = input_annotations[annotation_count]["end"] 
+                            # text_string = text_string[i]
+                            
 
                 fo.write('\n')
     
