@@ -15,6 +15,7 @@ parser.add_argument(
     help="Input directory where Brat annotations are stored",
 )
 
+
 parser.add_argument(
     "--output_file",
     dest="output_file",
