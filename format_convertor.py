@@ -114,11 +114,13 @@ class FormatConvertor:
                     pass
                 while i < num_tokens:
                     if current_index != current_ann_start:
-                        fo.write(f'{text_tokens[i]} O\n')
+                        if text_tokens[i] !='':
+                            fo.write(f'{text_tokens[i]} O\n') #Elimination of double spaces in .txt files
                         #print(text_tokens[i])
                         wordletterlist = list(text_tokens[i])
                         if '.' in wordletterlist:
-                            fo.write("\n")
+                            if text_tokens[i] not in ['Mrs.','Mr.', 'Dr.']:
+                                fo.write("\n")
                         #print(wordlist) 
                         current_index += len(text_tokens[i])+1
                         i += 1
@@ -126,8 +128,8 @@ class FormatConvertor:
                         label = input_annotations[annotation_count]["label"]
                         while current_index <= current_ann_end and i < num_tokens:
                             fo.write(f'{text_tokens[i]} {label}\n')
-                            if text_string[current_index] == '.':
-                                fo.write("heyy new line\n")
+                           # if text_string[current_index] == '.':
+                          #      fo.write("\n")
                             current_index += len(text_tokens[i])+1
                             i += 1
                         annotation_count += 1
