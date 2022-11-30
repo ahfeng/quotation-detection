@@ -139,12 +139,14 @@ class FormatConvertor:
                         i += 1
                     else:
                         label = input_annotations[annotation_count]["label"]
+                        prefix = "B-"
                         while current_index <= current_ann_end and i < num_tokens:
-                            fo.write(f'{text_tokens[i]} {label}\n')
+                            fo.write(f'{text_tokens[i]} {prefix}{label}\n')
                            # if text_string[current_index] == '.':
                           #      fo.write("\n")
                             current_index += len(text_tokens[i])+1
                             i += 1
+                            prefix = "I-"
                         
                         while annotation_count < num_annotations-1 and current_ann_end <= current_index:
                             annotation_count += 1
