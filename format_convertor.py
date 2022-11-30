@@ -114,17 +114,7 @@ class FormatConvertor:
                 if file_count ==1:
                     pass
                 while i < num_tokens:
-                    if current_index >= 13500 and current_index <= 13600:
-                        with open('debug.txt', 'a') as f:
-                            f.write("Current index: " + str(current_index))
-                            f.write(" Current token: " + text_tokens[i])
-                            f.write(" Next token: " + text_tokens[i+1])
-                            f.write(" Current annotation start: " + str(current_ann_start))
-                            f.write(" Current annotation end: " + str(current_ann_end))
-                            f.write(" Annotation count: " + str(annotation_count))
-                            f.write(" Num annotations: " + str(num_annotations))
-                            f.write("\n")
-                            
+                    
                     if current_index != current_ann_start:
                         if text_tokens[i] !='':
                             fo.write(f'{text_tokens[i]} O\n') #Elimination of double spaces in .txt files
