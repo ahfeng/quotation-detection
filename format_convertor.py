@@ -146,9 +146,11 @@ class FormatConvertor:
                             current_index += len(text_tokens[i])+1
                             i += 1
                         
-                        while annotation_count < num_annotations-1 and current_ann_end < current_index:
+                        while annotation_count < num_annotations-1 and current_ann_end <= current_index:
                             annotation_count += 1
                             current_ann_start = input_annotations[annotation_count]["start"]
+                            if current_ann_start < current_index:
+                                current_ann_start = current_index
                             current_ann_end = input_annotations[annotation_count]["end"] 
                             # text_string = text_string[i]
                             
