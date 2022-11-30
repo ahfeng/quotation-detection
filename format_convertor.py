@@ -3,6 +3,8 @@ from os import listdir, path
 from collections import namedtuple
 import argparse
 import re
+import nltk
+from nltk.tokenize import sent_tokenize
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -12,6 +14,7 @@ parser.add_argument(
     default='',
     help="Input directory where Brat annotations are stored",
 )
+
 
 parser.add_argument(
     "--output_file",
@@ -25,6 +28,9 @@ class FormatConvertor:
     def __init__(self, input_dir: str, output_file: str):
         self.input_dir = input_dir
         self.output_file = output_file
+
+        # self.input_dir = '/home/pranav/Dropbox (GaTech)/repos/brat2CoNLL/sample_input_data/'
+        # self.output_file = '/home/pranav/Dropbox (GaTech)/repos/brat2CoNLL/sample_output_data/test.txt'
 
     def read_input(self, annotation_file: str, text_file: str):
         """Read the input BRAT files into python data structures
@@ -47,27 +53,52 @@ class FormatConvertor:
             for line in fi:
                 annotation_record = {}
                 entry = line.split()
-                if entry[0] == "R1":
+                # print(entry[2])
+                # print(type(int(entry[2])))
+                #print(entry[0])
+                if entry[0]== 'R1':
                     break
-                annotation_record["label"] = entry[1]
-                annotation_record["start"] = int(entry[2])
-                annotation_record["end"] = int(entry[3])
-                annotation_record["text"] = ' '.join(entry[4:])
-                input_annotations.append(annotation_record)
+                else:
+                    annotation_record["label"] = entry[1]
+                    annotation_record["start"] = int(entry[2])
+                    annotation_record["end"] = int(entry[3])
+                    annotation_record["text"] = ' '.join(entry[4:])
+                    input_annotations.append(annotation_record)
         # Annotation file need not be sorted by start position so sort explicitly. Can also be done using end position
         input_annotations = sorted(input_annotations, key=lambda x: x["start"])
 
         return input_annotations, text_string
+
 
     def parse_text(self):
         """Loop over all annotation files, and write tokens with their label to an output file"""
         file_pair_list = self.read_input_folder()
 
         with open(self.output_file, 'w') as fo:
+            
             for file_count, file_pair in enumerate(file_pair_list):
-                annotation_file, text_file = file_pair.ann, file_pair.text   
+                annotation_file, text_file = file_pair.ann, file_pair.text
                 input_annotations, text_string = self.read_input(annotation_file, text_file)
-                text_tokens = re.split(r' ', text_string)
+
+                #Adding '-DOCSTART-' to the beginning of each text file
+                # if c ==0:
+                #     text_string = '-DOCSTART-' + text_string
+                #     #print(text_string[0:100])
+                # c=1
+                fo.write("-DOCSTART- O\n")
+
+                text_tokens = re.split(r' ', text_string) #Splits when there is single space, but also considers each space as a different token in cases where there are multiple consecutive space.       
+                #print(text_tokens[0:100])
+
+                #text_tokens = text_string.split()  #Splits when there is a single space
+                #text_tokens = text_string.split(". ") #Splits into sentences. But fails to account for cases where there are ... or quotes in a sentence
+                #print(text_tokens)
+                #Using nltk library to separate into sentences
+                # a = sent_tokenize(text_file)
+                # for i in range(len(a)):
+                #     a[i] =  '-DOCSTART-' + a[i]
+                #     #print(a[i])
+
                 annotation_count = 0
                 current_ann_start = input_annotations[annotation_count]["start"]
                 current_ann_end = input_annotations[annotation_count]["end"]
@@ -75,30 +106,56 @@ class FormatConvertor:
                 current_index = 0
                 num_tokens = len(text_tokens)
                 i = 0 # Initialize Token number
+                # if c == 0:
+                #     annotation_count = 1
+
+                
+                
                 if file_count ==1:
                     pass
                 while i < num_tokens:
-                    if current_index <= 6130:
-                        print(current_index)
-                    # print(current_ann_start)
-                    # print("same hai kya")
+                    if current_index >= 13500 and current_index <= 13600:
+                        with open('debug.txt', 'a') as f:
+                            f.write("Current index: " + str(current_index))
+                            f.write(" Current token: " + text_tokens[i])
+                            f.write(" Next token: " + text_tokens[i+1])
+                            f.write(" Current annotation start: " + str(current_ann_start))
+                            f.write(" Current annotation end: " + str(current_ann_end))
+                            f.write(" Annotation count: " + str(annotation_count))
+                            f.write(" Num annotations: " + str(num_annotations))
+                            f.write("\n")
+                            
                     if current_index != current_ann_start:
-                        fo.write(f'{text_tokens[i]} O\n')
+                        if text_tokens[i] !='':
+                            fo.write(f'{text_tokens[i]} O\n') #Elimination of double spaces in .txt files
+                        # else: current_index -= 1
+                        #print(text_tokens[i])
+                        wordletterlist = list(text_tokens[i])
+                        if '.' in wordletterlist:
+                            if text_tokens[i] not in ['Mrs.','Mr.', 'Dr.']:
+                                fo.write("\n")
+                        #print(wordlist) 
                         current_index += len(text_tokens[i])+1
                         i += 1
                     else:
-                        print("here")
-                        print(current_ann_start)
-                        print(current_index)
                         label = input_annotations[annotation_count]["label"]
+                        prefix = "B-"
                         while current_index <= current_ann_end and i < num_tokens:
-                            fo.write(f'{text_tokens[i]} {label}\n')
+                            fo.write(f'{text_tokens[i]} {prefix}{label}\n')
+                           # if text_string[current_index] == '.':
+                          #      fo.write("\n")
                             current_index += len(text_tokens[i])+1
                             i += 1
-                        annotation_count += 1
-                        if annotation_count < num_annotations:
+                            prefix = "I-"
+                        
+                        while annotation_count < num_annotations-1 and current_ann_end <= current_index:
+                            annotation_count += 1
                             current_ann_start = input_annotations[annotation_count]["start"]
-                            current_ann_end = input_annotations[annotation_count]["end"]
+                            if current_ann_start < current_index:
+                                current_ann_start = current_index
+                            current_ann_end = input_annotations[annotation_count]["end"] 
+                            # text_string = text_string[i]
+                            
 
                 fo.write('\n')
     
@@ -122,10 +179,11 @@ class FormatConvertor:
                 raise(f"{file} does not have a corresponding text file")
         
         return file_pair_list
+
             
 if __name__ == '__main__':
     args = parser.parse_args()
-    print(args)
-    print("anisha")
-    format_convertor = FormatConvertor("/Users/anishasingrodia/Desktop/ML_final_project/riqua/merged", "output1.txt")
+
+    # format_convertor = FormatConvertor(args.input_dir, args.output_file)
+    format_convertor = FormatConvertor("../riqua/merged/", "output_RIQUA")
     format_convertor.parse_text()
